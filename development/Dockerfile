@@ -5,7 +5,7 @@ RUN apk add --update bash
 
 RUN curl -LO https://storage.googleapis.com/spinnaker-artifacts/spin/"$(curl -s https://storage.googleapis.com/spinnaker-artifacts/spin/latest)"/linux/amd64/spin \
     -o /usr/local/bin/spin \
-    && chmod +x /usr/local/bin/spin \
+    && chmod +x /spin \
     && mv spin /usr/local/bin/spin
     
 ENV JQ_VERSION="jq-1.6"
