@@ -1,6 +1,6 @@
 FROM alpine:latest
 
-RUN apk update && apk add -y curl
+RUN apk --no-cache add curl
 
 ENV JQ_VERSION="jq-1.6"
 RUN curl -L https://github.com/stedolan/jq/releases/download/${JQ_VERSION}/jq-linux64 \
