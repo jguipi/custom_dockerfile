@@ -3,6 +3,10 @@ FROM alpine:latest
 RUN apk --no-cache add curl
 RUN apk add --update bash
 
+RUN curl -LO https://storage.googleapis.com/spinnaker-artifacts/spin/$(curl -s https://storage.googleapis.com/spinnaker-artifacts/spin/latest)/linux/amd64/spin \
+    && chmod +x /usr/local/bin/spin \
+    && spin /usr/local/bin/spin
+
 ENV JQ_VERSION="jq-1.6"
 RUN curl -L https://github.com/stedolan/jq/releases/download/${JQ_VERSION}/jq-linux64 \
     -o /usr/local/bin/jq \
