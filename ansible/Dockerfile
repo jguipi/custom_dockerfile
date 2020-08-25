@@ -25,11 +25,3 @@ RUN pip install --upgrade pip \
         python-dateutil \
       && find /usr/lib/ -name '__pycache__' -print0 | xargs -0 -n1 rm -rf \
       && find /usr/lib/ -name '*.pyc' -print0 | xargs -0 -n1 rm -rf
-
-# Copies your code file from your action repository to the filesystem path `/` of the container
-COPY ./scripts/run-ansible.sh /run-ansible.sh
-
-RUN chmod +x /run-ansible.sh
-
-# Code file to execute when the docker container starts up (`entrypoint.sh`)
-ENTRYPOINT ["/run-ansible.sh"]
