@@ -1,27 +1,60 @@
+FROM docker:19.03.11 as static-docker-source
+
 FROM ubuntu:16.04
+ARG CLOUD_SDK_VERSION=323.0.0
+ENV CLOUD_SDK_VERSION=$CLOUD_SDK_VERSION
+ENV ANSIBLE_VERSION="2.9.12"
+ENV PATH "$PATH:/opt/google-cloud-sdk/bin/"
 
-ENV ANSIBLE_VERSION="2.9.12-1ppa~xenial"
-
-# Install ansible and clean up apt when done.
-RUN apt-get update -y \
-      && apt-get install -y software-properties-common \
-      && add-apt-repository ppa:ansible/ansible-2.9 -y \
-      && apt-get update -y \
-      && apt-get install -y ansible="${ANSIBLE_VERSION}" \
-        python-pip \
-        python-dev \
-        build-essential \
-        git \
+COPY --from=static-docker-source /usr/local/bin/docker /usr/local/bin/docker
+RUN apt-get -qqy update && apt-get install -qqy \
         jq \
-      && apt-get clean \
-      && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-   
-# Install boto
-RUN pip install --upgrade pip \
-      && pip install --upgrade awscli \
+        file \
+        curl \
+        python3-dev \
+        python3-crcmod \
+        python-crcmod \
+        apt-transport-https \
+        lsb-release \
+        openssh-client \
+        git \
+        make \
+        gnupg && \
+    export CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)" && \
+    echo "deb https://packages.cloud.google.com/apt $CLOUD_SDK_REPO main" > /etc/apt/sources.list.d/google-cloud-sdk.list && \
+    curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - && \
+    apt-get update && \
+    apt-get install -y google-cloud-sdk=${CLOUD_SDK_VERSION}-0 \
+        google-cloud-sdk-app-engine-python=${CLOUD_SDK_VERSION}-0 \
+        google-cloud-sdk-app-engine-python-extras=${CLOUD_SDK_VERSION}-0 \
+        google-cloud-sdk-app-engine-java=${CLOUD_SDK_VERSION}-0 \
+        google-cloud-sdk-app-engine-go=${CLOUD_SDK_VERSION}-0 \
+        google-cloud-sdk-datalab=${CLOUD_SDK_VERSION}-0 \
+        google-cloud-sdk-datastore-emulator=${CLOUD_SDK_VERSION}-0 \
+        google-cloud-sdk-pubsub-emulator=${CLOUD_SDK_VERSION}-0 \
+        google-cloud-sdk-bigtable-emulator=${CLOUD_SDK_VERSION}-0 \
+        google-cloud-sdk-firestore-emulator=${CLOUD_SDK_VERSION}-0 \
+        google-cloud-sdk-spanner-emulator=${CLOUD_SDK_VERSION}-0 \
+        google-cloud-sdk-cbt=${CLOUD_SDK_VERSION}-0 \
+        kubectl && \
+    gcloud --version && \
+    docker --version && kubectl version --client
+RUN apt-get install -qqy \
+        gcc \
+        python3-pip
+
+# Install boto and ansible
+RUN pip3 install --upgrade pip \
+      && pip3 install --upgrade awscli \
+        pyopenssl \
+        ansible=="${ANSIBLE_VERSION}" \
         openshift \
-      && pip --no-cache-dir install -U boto \
+        setuptools \
+      && pip3 --no-cache-dir install -U boto \
         boto3 \
         python-dateutil \
       && find /usr/lib/ -name '__pycache__' -print0 | xargs -0 -n1 rm -rf \
       && find /usr/lib/ -name '*.pyc' -print0 | xargs -0 -n1 rm -rf
+
+# Minor fix to resolve setuptools
+RUN pip install "setuptools!=50.0" --force-reinstall
